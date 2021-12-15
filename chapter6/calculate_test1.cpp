@@ -1,19 +1,30 @@
 #include "/Users/fuchun/Document/c++_language_project/pppc++/std_lib_facilities.h"
 double expression();
-class Token {
+class Token{   
 public:
-    char kind;
-    double value;
+    char kind;        // what kind of token
+    double value;     // for numbers: a value 
+    Token(char ch)    // make a Token from a char
+        :kind(ch), value(0) { }
+    Token(char ch, double val)     // make a Token from a char and a double
+        :kind(ch), value(val) { }
 };
+
 class Token_stream
 {
     public:  //公共（用户）接口
+        Token_stream();
         Token get(); //获取一个单词
         void putback(Token T); //放回一个单词
     private: //私人接口（实现细节）
-        bool full{false};  //缓冲区是否有单词
+        bool full;  //缓冲区是否有单词
         Token buffer;  //存储putback放回单词的缓冲区
 };
+
+Token_stream::Token_stream()
+    :full(false), buffer(0)    // no Token in buffer
+{
+}
 
 void Token_stream ::putback(Token t)
 {
@@ -28,32 +39,31 @@ Token Token_stream::get()
         full = false;
         return buffer; //删除缓冲区中的单词
     }
-    else
+    char ch;
+    cin >> ch;  //cin会忽略空白符
+    switch (ch)
     {
-        char ch;
-        cin >> ch;  //cin会忽略空白符
-        switch (ch)
-        {
-        case ';': //立即输出结果
-        case 'q': //表示退出
-        case '(':case ')':case '+':case '-':case '*':case '/':
-            return Token{ch};
-        case '.':
-        case '0':case '1':case '2':case '3':case '4':
-        case '5':case '6':case '7':case '8':case '9':
-        {
-            cin.putback(ch); //将数字或小数点放回输入流中
-            double val;
-            cin >> val;
-            return Token{'8',val}; //用‘8’表示这是一个数字
-        }
-        default:
-            error("Bad Token");
-        }
+    case ';': //立即输出结果
+    case 'q': //表示退出
+    case '(':case ')':case '{':case '}':case '+':case '-':case '*':case '/':case '!':
+        return Token{ch};
+    case '.':
+    case '0':case '1':case '2':case '3':case '4':
+    case '5':case '6':case '7':case '8':case '9':
+    {
+        cin.putback(ch); //将数字或小数点放回输入流中
+        double val;
+        cin >> val;
+        return Token{'8',val}; //用‘8’表示这是一个数字
     }
+    default:
+        error("Bad Token");
+    }
+
 }
 
 Token_stream ts;  //类的实例
+
 double primary()            // 处理数字和括号
 {
     Token t = ts.get();
@@ -71,10 +81,24 @@ double primary()            // 处理数字和括号
                 double d = expression();
                 t = ts.get();
                 if (t.kind != '}') error("'}' expected");
+                
                 return d;
             }
         case '8':                   // we use '8' to represent a number
-            return t.value;         // return the number's value
+            {
+                double ans = t.value;
+                t = ts.get();
+                if (t.kind == '!')
+                {
+                    if(ans == 0) ans = 1;
+                    int fact = ans-1;
+                    while (fact)
+                        ans *= fact--;
+                }
+                else
+                    ts.putback(t);
+                return ans;   // return the number's value
+            }
         default:
             return -1;
             error("primary expected");
