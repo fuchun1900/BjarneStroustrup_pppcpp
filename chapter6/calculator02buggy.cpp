@@ -21,7 +21,7 @@
 
 //------------------------------------------------------------------------------
 
-lass Token{
+class Token{   //cerror 1 缺少c
 public:
     char kind;        // what kind of token
     double value;     // for numbers: a value 
@@ -63,7 +63,7 @@ void Token_stream::putback(Token t)
 
 //------------------------------------------------------------------------------
 
-Token get()
+Token Token_stream::get() //cerror 2缺少类前缀
 {
     if (full) {       // do we already have a Token ready?
         // remove token from buffer
@@ -112,7 +112,7 @@ double primary()
     {
         double d = expression();
         t = ts.get();
-        if (t.kind != ')') error("')' expected);
+        if (t.kind != ')') error("')' expected"); //cerror3 missing "
             return d;
     }
     case '8':            // we use '8' to represent a number
@@ -135,6 +135,7 @@ double term()
         case '*':
             left *= primary();
             t = ts.get();
+            break;  //error1 Missing break
         case '/':
         {
             double d = primary();
@@ -155,7 +156,7 @@ double term()
 // deal with + and -
 double expression()
 {
-    double left = term(;      // read and evaluate a Term
+    double left = term();      // read and evaluate a Term  cerror4 missing )
     Token t = ts.get();        // get the next token from token stream
 
     while (true) {
@@ -165,7 +166,7 @@ double expression()
             t = ts.get();
             break;
         case '-':
-            left += term();    // evaluate Term and subtract
+            left -= term();    // evaluate Term and subtract   error2 shoud be -
             t = ts.get();
             break;
         default:
@@ -180,12 +181,13 @@ double expression()
 int main()
 try
 {
+    double val = 0; //error3 缺少变量初始化
     while (cin) {
         Token t = ts.get();
 
         if (t.kind == 'q') break; // 'q' for quit
         if (t.kind == ';')        // ';' for "print now"
-            cout << "=" << val << '\n';
+            cout << '=' << val << '\n';
         else
             ts.putback(t);
         val = expression();
